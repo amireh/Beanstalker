@@ -1,0 +1,33 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"> 
+<html lang='en' xml:lang='en' xmlns='http://www.w3.org/1999/xhtml'> 
+  <head> 
+    <meta content='text/html; charset=utf-8' http-equiv='Content-Type' />
+    <title>Beanstalker</title>
+
+    <link href="<%=versioned_stylesheet('application')%>" media='screen' rel='stylesheet' type='text/css' /> 
+    <script src="<%=versioned_javascript('application')%>" type='text/javascript'></script> 
+
+  </head>
+
+  <body>
+    <div id="container">
+
+      <div id="path">
+        <%= "#{printHeader}" %>
+      </div>
+
+      <div id="menu">
+        <ul>
+          <li><a href='<%= "#{appRoot}" %>'>Server</a></li>
+          <li><a href='<%= "#{appRoot}/tubes" %>'>Browse Tubes</a></li>
+        </ul>
+      </div>
+
+      <div id="content">
+        <%= yield %>
+      </div>
+    </div>
+  </body>
+
+</html>
+

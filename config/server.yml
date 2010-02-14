@@ -1,0 +1,7 @@
+application:
+  host: 127.0.0.1
+  port: 9090
+
+beanstalkd:
+  host: 127.0.0.1
+  port: 11300

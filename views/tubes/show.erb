@@ -1,0 +1,43 @@
+<div class="header"><span><%= params[:tube_name] %></span></div>
+<% states = ["ready", "buried"] %>
+<% for state in states do %>
+  <%= "<div class='header-jobs'><span>#{state.capitalize}</span></div>" %>
+  <%= "<div id='block-jobs'>" %>
+  <% if info["jobs"]["#{state}"].empty? then %>
+    <%= "There are no jobs in this state." %>
+  <% else %>
+  <table cellpadding="0" cellspacing="0">
+    <tr>
+      <th>ID</th>
+      <th>Priority</th>
+      <th>Timeouts</th>
+      <th>TTR</th>
+      <th>Age</th>
+      <th>Buries</th>
+      <th>Kicks</th>
+      <th style="width: 35%;">Operations</th>
+    </tr>
+  <% color_cycler = "light" %>
+  <% info["jobs"]["#{state}"].each do |id, job| %>
+  <tr class="<%=color_cycler%>">
+    <td><%= job["id"] %></td>
+    <td><%= job["pri"] %></td>
+    <td><%= job["timeouts"] %></td>
+    <td><%= job["ttr"] %></td>
+    <td><%= job["age"] %></td>
+    <td><%= job["buries"] %></td>
+    <td><%= job["kicks"] %></td>
+    <td>
+      <a href='<%="#{appRoot}/jobs/#{job["id"]}/bury"%>'>Bury</a> | 
+      <a href='<%="#{appRoot}/jobs/#{job["id"]}/delete"%>'>Delete</a>
+    </td>
+  </tr>
+  <% color_cycler = (color_cycler == "light") ? "dark" : "light" %>
+  <% end %>
+  </table>
+  <% end %>
+  <%= "</div>" %>
+<% end %>
+
+<br />
+<%= linkToRoot %>

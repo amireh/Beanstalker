@@ -1,0 +1,8 @@
+<div class="header-line"><span>Beanstalker</span></div>
+
+<div id="block-stats">
+<% @stats.each do |stat, value| %>
+  <%= "\t<span style='font-weight:bold'>#{stat.gsub('-', ' ').capitalize}</span>:\t#{value} <br />" if stat.to_s[0..2] != "cmd" %>
+<% end %>
+
+</div>

@@ -1,0 +1,31 @@
+<span class="header">Tubes</span>
+<br />
+<% nrTubes = 0 %>
+<% for tube in @tubes do %>
+<% unless tube == "temp" || tube == "default" then %>
+<% nrTubes += 1 %>
+<% stats = bsh.stats_tube(tube) %>
+  <br />
+  <div class="header-line"><a href="<%=appRoot%>/tubes/<%=stats['name']%>"><%=stats["name"]%></a></div>
+  <div id="block-stats">
+    Paused: <%= stats["pause"] == 0 ? "No" : "Yes" %>
+    <br />Pause Time Left: <%= stats["pause-time-left"] %>
+    <hr />
+    <b>Total Jobs</b>: <%= stats["total-jobs"] %>
+    <br />Current Jobs Reserved: <%= stats["current-jobs-reserved"] %>
+    <br />Current Jobs Urgent: <%= stats["current-jobs-urgent"] %>
+    <br />Current Jobs Ready: <%= stats["current-jobs-ready"] %>
+    <br />Current Jobs Buried: <%= stats["current-jobs-buried"] %>
+    <br />Current Jobs Delayed: <%= stats["current-jobs-delayed"] %>
+
+    <hr />
+
+    Current Watching: <%= stats["current-watching"] %>
+    <br />Current Using <%= stats["current-using"] %>
+    <br />Current Waiting <%= stats["current-waiting"] %>
+
+  </div>
+<% end %>
+<% end %>
+<%= "<div class='header-line'><span>There are no active tubes.</span></div>" if nrTubes == 0 %>
+<br /><%= linkToRoot %>
