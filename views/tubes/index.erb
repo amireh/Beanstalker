@@ -2,7 +2,6 @@
 <br />
 <% nrTubes = 0 %>
 <% for tube in @tubes do %>
-<% unless tube == "temp" || tube == "default" then %>
 <% nrTubes += 1 %>
 <% stats = bsh.stats_tube(tube) %>
   <br />
@@ -25,7 +24,6 @@
     <br />Current Waiting <%= stats["current-waiting"] %>
 
   </div>
-<% end %>
 <% end %>
 <%= "<div class='header-line'><span>There are no active tubes.</span></div>" if nrTubes == 0 %>
 <br /><%= linkToRoot %>

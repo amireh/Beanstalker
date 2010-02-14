@@ -3,7 +3,7 @@
 require 'rubygems'
 require 'sinatra/base'
 #require 'sinatra'
-require 'beanstalk-client'
+require '../Client/lib/beanstalk-client'
 require 'erb'
 #require 'sass'
 require 'app/beans-processor'
@@ -87,9 +87,9 @@ module Beanstalker
         "/javascripts/#{js}.js"
       end
 
-      def pullJob
-        job = @@bsh.reserve(2)
-      end
+      #def pullJob
+      #  job = @@bsh.reserve(2)
+      #end
 
       def pushJob(message, options = {})
         priority = options[:priority] || 65536
@@ -104,6 +104,7 @@ module Beanstalker
     before do
       halt "Connection is not setup!" unless is_setup?
       @@bsh.watch(@@current_tube) unless @@current_tube.nil?
+      @@bsh.use(@@current_tube) unless @@current_tube.nil?
     end
 
     get '/' do
@@ -119,6 +120,7 @@ module Beanstalker
     get '/tubes/:tube_name' do |name|
       #@tube = @@bsh.stats_tube(name)
       @@current_tube = name
+      
       tube_info = BeansProcessor::parseTube(@@current_tube)
       erb :"tubes/show", :locals => { :info => tube_info }
     end

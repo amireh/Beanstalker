@@ -1,5 +1,5 @@
 <div class="header"><span><%= params[:tube_name] %></span></div>
-<% states = ["ready", "buried"] %>
+<% states = ["reserved", "ready", "buried"] %>
 <% for state in states do %>
   <%= "<div class='header-jobs'><span>#{state.capitalize}</span></div>" %>
   <%= "<div id='block-jobs'>" %>
