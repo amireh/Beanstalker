@@ -1,43 +1,114 @@
-<div class="header"><span><%= params[:tube_name] %></span></div>
+<% content_for :scripts do %>
+  <script type="text/javascript">
+
+    /* pops up a form for kicking a number of buried jobs */
+    function kick_form() {
+      form = document.getElementById("kick-form").style.display="block";
+      anchor = document.getElementById("kick-anchor").style.display="none";
+    }
+
+  $(document).ready(function() {
+
+    /* updates job-body box with the chosen job's body data */
+    $('.job').click(function() {
+      var id = "#job-body-"+$(this).attr('id');
+      $("#job-body-content").text($(id).text());
+    });
+
+  });
+    
+  </script>
+<% end %>
+
+<div id="jobs-container">
+
+<% unless flash[:notice].nil? then %>
+  <div id="flash-notice"><%= flash[:notice] %></div>
+<% end %>
+
+<div class="header">
+  <span><%= params[:tube_name] %></span>
+</div>
+
+<!-- the states of jobs we are listing, which define how we're categorizing -->
 <% states = ["reserved", "ready", "buried"] %>
+<div id="jobs-listing">
+
 <% for state in states do %>
-  <%= "<div class='header-jobs'><span>#{state.capitalize}</span></div>" %>
-  <%= "<div id='block-jobs'>" %>
+  <div class='header-jobs'>
+
+    <span style="float:left">
+      <%= state.capitalize %>
+    </span>
+
+    <!-- kicking form -->
+    <% if state == "buried" %>
+      <span id="kick-anchor" onClick="kick_form()">
+        <a>(kick buried jobs)</a>
+      </span>
+      <div id="kick-form">
+        <form method="post" action='<%= "#{appRoot}/tubes/#{params[:tube_name]}/kick" %>'>
+          <input type="text" name="nrJobsToKick" size="1" value="0">
+          <input type="submit" name="kick-button" value="Kick">
+        </form>
+      </div>
+    <% end %>
+
+    <div style="clear:both"></div>
+
+  </div> <!-- end of header -->
+
+  <div id='block-jobs'>
   <% if info["jobs"]["#{state}"].empty? then %>
     <%= "There are no jobs in this state." %>
   <% else %>
-  <table cellpadding="0" cellspacing="0">
-    <tr>
-      <th>ID</th>
-      <th>Priority</th>
-      <th>Timeouts</th>
-      <th>TTR</th>
-      <th>Age</th>
-      <th>Buries</th>
-      <th>Kicks</th>
-      <th style="width: 35%;">Operations</th>
+    <table cellpadding="0" cellspacing="0">
+      <tr>
+        <th>ID</th>
+        <th>Priority</th>
+        <th>Timeouts</th>
+        <th>TTR</th>
+        <th>Age</th>
+        <th>Buries</th>
+        <th>Kicks</th>
+        <% if state =="ready" %>
+          <th style="width: 20%;">Operations</th>
+        <% end %>
+      </tr>
+    <% color_cycler = "light" %>
+    <% info["jobs"]["#{state}"].each do |id, job| %>
+    <div id="job-body-<%=id%>" style="display:none"><%=job["body"]%></div>
+    <tr id="<%=id%>" class="job <%=color_cycler%>"> 
+      <td><%= job["id"] %></td>
+      <td><%= job["pri"] %></td>
+      <td><%= job["timeouts"] %></td>
+      <td><%= job["ttr"] %></td>
+      <td><%= job["age"] %></td>
+      <td><%= job["buries"] %></td>
+      <td><%= job["kicks"] %></td>
+      <% if state == "ready" %>
+        <td style="text-align: center">
+          <a href='<%="#{appRoot}/jobs/#{job["id"]}/delete"%>'>Delete</a>
+      </td>
+      <% end %>
     </tr>
-  <% color_cycler = "light" %>
-  <% info["jobs"]["#{state}"].each do |id, job| %>
-  <tr class="<%=color_cycler%>">
-    <td><%= job["id"] %></td>
-    <td><%= job["pri"] %></td>
-    <td><%= job["timeouts"] %></td>
-    <td><%= job["ttr"] %></td>
-    <td><%= job["age"] %></td>
-    <td><%= job["buries"] %></td>
-    <td><%= job["kicks"] %></td>
-    <td>
-      <a href='<%="#{appRoot}/jobs/#{job["id"]}/bury"%>'>Bury</a> | 
-      <a href='<%="#{appRoot}/jobs/#{job["id"]}/delete"%>'>Delete</a>
-    </td>
-  </tr>
-  <% color_cycler = (color_cycler == "light") ? "dark" : "light" %>
-  <% end %>
-  </table>
-  <% end %>
-  <%= "</div>" %>
+    <% color_cycler = (color_cycler == "light") ? "dark" : "light" %>
+    <% end %>
+    </table>
+    <% end %>
+  </div> <!-- end of block-jobs -->
 <% end %>
 
-<br />
-<%= linkToRoot %>
+</div> <!-- jobs-listing -->
+
+<!-- job body -->
+<div id="job-body">
+  <div class="header-jobs" style="margin: 0">
+    <span>Job body</span>
+  </div>
+  <div id="job-body-content"></div>
+</div> <!-- end of job body -->
+
+<span class="link-back"><%= linkToTubes %></span>
+
+</div> <!-- end of jobs-container -->

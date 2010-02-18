@@ -6,7 +6,9 @@
 
     <link href="<%=versioned_stylesheet('application')%>" media='screen' rel='stylesheet' type='text/css' /> 
     <script src="<%=versioned_javascript('application')%>" type='text/javascript'></script> 
+    <script src="<%=versioned_javascript('jquery-1.3.2.min')%>" type='text/javascript'></script> 
 
+    <% yield_content :scripts %>
   </head>
 
   <body>
@@ -19,7 +21,9 @@
       <div id="menu">
         <ul>
           <li><a href='<%= "#{appRoot}" %>'>Server</a></li>
-          <li><a href='<%= "#{appRoot}/tubes" %>'>Browse Tubes</a></li>
+          <li> 
+            <a href='<%= "#{appRoot}/tubes" %>'>Browse Tubes</a>
+          </li>
         </ul>
       </div>
 

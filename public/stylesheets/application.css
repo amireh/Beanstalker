@@ -4,11 +4,13 @@ body {
   font: normal 80% Tahoma,sans-serif; 
   padding: 0 0 0 20px;
 }
-
+#container {
+  width: 1000px;
+}
 #block-stats {
   background-color: #fff;
   padding: 5px;
-  width: 50%;
+  width: 500px;
 }
 
 .header-line {
@@ -16,7 +18,7 @@ body {
   padding: 0 5px 0 5px;
   clear: both;
   margin: 0;
-  width: 50%;
+  width: 500px;
   color: #fff;
   line-height: 2.4em;
 }
@@ -29,10 +31,14 @@ body {
 
 .header {
   font-size: 20px;
+  clear:both;
+  border: 1px dashed #ccc;
+  padding: 5px;
+  color: gray;
 }
 
 #block-jobs {
-  width: 70%;
+  width: 100%;
   padding: 5px;
   background-color: #fff;
 }
@@ -42,14 +48,14 @@ body {
   padding: 0 5px 0 5px;
   clear: both;
   margin: 10px 0 0 0;
-  width: 70%;
+  width: 100%;
   color: #fff;
   line-height: 2.4em;
 }
 
 #block-jobs th {
   width: 10%;
-  text-align: left;
+  text-align: center;
   border: 1px dashed #ccc;
   border-left: none;
   padding: 2px 0 2px 5px;
@@ -59,6 +65,7 @@ body {
   margin: 0;
   padding: 0 0 0 4px;
   line-height: 2em;
+  text-align: center;
 }
 
 .light {
@@ -71,35 +78,110 @@ body {
 tr.light:hover, tr.dark:hover {
   background: #bbb;
 }
-
 #menu {
   float: left;
   clear: none;
-  width: 120px;
-  overflow: hidden;
+    width: 180px;
   background-color: #F5F5F5;
   padding: 5px;
-  height: 100px;
 }
-
 #menu ul {
   list-style-type: none;
   padding: 0;
   margin: 0;
 }
 
+#menu li {
+  background: #E7E7E2;
+  padding: 5px;
+  margin: 0 0 5px 0;
+}
+#menu li:hover {
+  background: white;
+}
+
+#menu-tubes {
+  margin: 5px 0 0 0;
+}
+#menu-tubes ul {
+  list-style-type: circle;
+  margin: 0;
+  padding: 0;
+}
+#menu-tubes li {
+  margin: 0 0 0 25px;
+  padding: 0;
+}
+
 #content {
-  width: 700px;
+  width: 800px;
   float: left;
   margin: 0 0 0 10px;
 }
 
 #path {
-  width: 100%;
+  clear:both;
   background: #ccc;
   line-height: 2em;
   padding: 0 0 0 10px;
   font-size: 16px;
   font-weight: bold;
   margin: 0 0 10px 0;
+}
+
+#kick-form {
+  color: #bdbdbd;
+  float:right;
+  padding: 0;
+  margin: 0;
+  display:none;
+}
+#kick-anchor a {
+  text-decoration:underline;
+  font-size:10px; 
+  float:right;
+}
+#jobs-container {
+  width: 100%;
+  float:left;
+}
+#jobs-listing {
+  float: left;
+  width: 500px;
+}
+#job-body {
+  float:right;
+  margin: 10px 0 0 525px;
+  width: 275px;
+  height: 420px;
+  position: fixed;
+  background: white;
+  overflow: hidden;
+}
+#job-body-content {
+  padding: 5px;
+  font-weight: bold;
+}
+
+#flash-notice {
+  clear:both;
+  border: 1px dashed #ccc;
+  line-height: 2em;
+  padding: 5px;
+  margin: 0 0 10px 0;
+  color: red;
+  font-weight: bold;
+}
+
+.link-back {
+  clear:both;
+  float:left;
+  margin: 10px 0 10px 0;
+  border: dashed 1px #ccc;
+  width: 500px;
+  padding: 0 0 0 5px;
+}
+.link-back a {
+  border: none;
+  color: red;
 }

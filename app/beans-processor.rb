@@ -12,49 +12,49 @@ module Beanstalker
       puts "| Processor: \t#{message}"
     end
 
-    # temp tube is used for job browsing and reading purposes
     @@pool = nil
     @@connection = nil
     @@t = {}
     @@states = ["reserved", "ready", "buried"]
-    @@jobs = {"reserved" => {}, "ready" => {}, "buried" => {}}
 
 
     # MUST call before any other
     # args: valid, active beanstalk-client connection
-    def self.setHandler(connection, options)
-      @@pool = connection
-      @@connection = @@pool.last_conn
+    def self.setHandler(pool, options)
+      @@pool = pool
+      @@connection = @@pool.open_connection(options["host"], options["port"])
+      raise CouldNotConnect if @@pool.nil? || @@connection.nil?
     end
 
     def self.is_connected?
-      @@connection = @@pool.last_conn
       return !@@pool.nil?
     end
 
     # returns a hash that contains all
-    # information of a given job
+    # information for a certain job
     def self.parseJob(idJob)
       raise NotConnected if !is_connected?
 
+      # get stats
       job = @@connection.job_stats(idJob)
-      bslog "Parsing job and storing into hash['#{@@current_state}']"
+      # get job body
+      job["body"] = @@connection.peek_job(idJob).body
+
+      # store job info
       @@t["jobs"]["#{job["state"]}"]["#{job["id"]}"] = job
+      return job
     end
 
     # returns a hash of all jobs in current tube
     def self.parseTube(tube)
-      bslog "Parsing tube `#{tube}'"
-
       raise NotConnected if !is_connected?
 
       # make sure we're only modifying current tube
       @@pool.use(tube)
       @@pool.watch(tube)
-      @@connection = @@pool.last_conn
+      # ignore all other tubes
       tubes = @@pool.list_tubes
       tubes["#{@@connection.addr}"].each { |t| @@pool.ignore(t) unless t == tube }
-      bslog "Connected at tube `#{@@pool.list_tube_used}'"
 
       @@t ||= {} # our temp tube
 
@@ -68,17 +68,17 @@ module Beanstalker
               "using" => 0,
               "waiting" => 0}
       
-      #data = @@pool.stats_tube(tube)
       for state in @@states do
         @@current_state = state
 
+        begin
         # figure out which jobs we will be processing
-        puts "| State: #{@@current_state} => { `#{@@connection.reserved_jobs.inspect}', `#{@@connection.list_all_jobs.inspect}', `#{@@connection.buried_jobs.inspect}' }"
         tube_jobs = 
-          (state == "reserved") ? @@connection.reserved_jobs : 
-          (state == "ready")    ? @@connection.list_all_jobs : 
-                                  @@connection.buried_jobs
-
+          (state == "reserved") ? @@connection.list_jobs_reserved : 
+          (state == "ready")    ? @@connection.list_jobs_ready : 
+                                  @@connection.list_jobs_buried
+        rescue Exception => e
+        end
         # no jobs in this state, parse next state
         next if tube_jobs.nil?
 
@@ -88,79 +88,23 @@ module Beanstalker
         end
 
       end
-=begin
-      while true
-        # retrieve
-          job = popJob(@@pool)
 
-        break if job.nil? # no more jobs in queue
-        
-        # process
-          parseJob(job)
-          pushJob(job)
-      end
-=end
-
-      # restore original queue
-      # rebuildTube(tube)
       return @@t
     end
 
-    #def self.pushJob(job)
-    #  bslog "Pushing job into #{@@pool.list_tube_used} with id #{job.id}"
-    #  @@jobs["#{@@current_state}"]["#{job.id}"] = job unless @@jobs["#{@@current_state}"].has_key?("#{job.id}")
-    #end
-
-    # gets job from front of queue
-    #def self.popJob(connection)
-    #  bslog "Popping job from #{connection.list_tube_used}"
-    #  connection.reserve(PULLING_TIMER) rescue nil
-    #end
-
-    #def self.rebuildTube(tube)
-    #  @@pool.watch(tube)
-    #  @@pool.use(tube)
-
-    #  return if @@jobs["#{@@current_state}"].empty?
-    #  @@jobs["#{@@current_state}"].each do |id, j|
-    #    j.release
-    #  end
-
-    #  # clear up
-    #  for state in @@states do
-    #    @@jobs["#{state}"].clear
-    #  end
-    #end
-
-    def self.buryJob(id, pri = 65536)
+    def self.deleteJob(id)
       return if !is_connected?
-
-      bslog "Burying job with id #{id}"
-      job = getJob(id)
-
-      raise InvalidOperation if (job["state"] != "reserved")
-
-      @@pool.bury(id, pri)
-
-    end
-
-    def self.releaseJob(id, pri=65536, delay=0)
-      return if !is_connected?
-
-      job = getJob(id)
-
-      # make sure we're releasing a reserved job
-      raise InvalidOperation if (job["state"] != "reserved")
-
-      # job is reserved, release it
-      @@pool.release(job["id"], pri, delay)
-
+ 
+      @@connection.delete(id)
     end
 
     # helper method for fetching a hash of job stats using their id
     def self.getJob(id)
-      @@pool.job_stats(id) #.fetch("#{@@pool.last_conn.addr}")
+      @@connection.job_stats(id) #.fetch("#{@@pool.last_conn.addr}")
     end
 
+    def self.kickTube(nrJobs)
+      @@connection.kick_jobs(nrJobs)
+    end
   end
 end

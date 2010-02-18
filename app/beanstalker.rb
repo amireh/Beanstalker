@@ -2,10 +2,10 @@
 
 require 'rubygems'
 require 'sinatra/base'
-#require 'sinatra'
+require 'sinatra/content_for'
 require '../Client/lib/beanstalk-client'
 require 'erb'
-#require 'sass'
+require 'rack-flash'
 require 'app/beans-processor'
 
 module Beanstalker
@@ -15,7 +15,10 @@ module Beanstalker
   class NotConnected < Exception; end
 
   class Server < Sinatra::Base
+  
+    include Sinatra::ContentFor
 
+    # helper logger
     def self.bslog(message, header=false)
       puts "| ---------- #{message} ----------" if header
       puts "| Server: \t#{message}" if !header
@@ -29,9 +32,9 @@ module Beanstalker
       set :public, Proc.new { File.join(root, "public") }
       set :static, Proc.new { File.join(root, "public") }
       set :environment, :production
-      # disable server runing on object creation .. has to be manually called
-      disable :run
+      disable :run # disable server runing on object creation .. has to be manually called
       enable :logging, :sessions
+      use Rack::Flash # used for flash[:notice]s
 
       # load our config file
       @@config = YAML.load(File.open(File.join(File.expand_path(File.dirname(__FILE__)), '..', 'config', 'server.yml')))
@@ -44,11 +47,18 @@ module Beanstalker
       # handler to beanstalkd connection
       @@bsh = nil 
       begin
+
         # initialise connection
         @@bsh = Beanstalk::Pool.new("#{@@config['beanstalkd']['host']}:#{@@config['beanstalkd']['port']}")
+
+        # initialise our processor
         BeansProcessor::setHandler(@@bsh, @@config['beanstalkd'])
       rescue Exception => e 
-        raise CouldNotConnect, "Could not connect to beanstalkd @ #{@@config['beanstalkd']['host']}:#{@@config['beanstalkd']['port']}.\n`#{e.message}'"
+        raise (CouldNotConnect, 
+              "Could not connect to beanstalkd @ 
+              #{@@config['beanstalkd']['host']}:
+              #{@@config['beanstalkd']['port']}.
+              \nError body: `#{e.message}'")
       end
 
       ROOT = "http://#{@@config['application']['host']}:#{@@config['application']['port']}"
@@ -64,7 +74,11 @@ module Beanstalker
       end
       
       def linkToRoot(body='Back')
-        "<a href='#{ROOT}'>#{body}</a>"
+        "<a class='link-back' href='#{ROOT}'>#{body}</a>"
+      end
+
+      def linkToTubes(body='Back')
+        "<a class='link-back' href='#{ROOT}/tubes'>#{body}</a>"
       end
 
       def appRoot
@@ -76,74 +90,61 @@ module Beanstalker
       end
 
       def versioned_stylesheet(stylesheet)
-        #puts "Getting stylesheet #{stylesheet}.."
-        #"/stylesheets/#{stylesheet}.css?" + File.mtime(File.join(Sinatra::Application.views, "stylesheets", "#{stylesheet}.css")).to_i.to_s
         "/stylesheets/#{stylesheet}.css"
       end
 
       def versioned_javascript(js)
-        #puts "Getting js ..."
-        #"/javascripts/#{js}.js?" + File.mtime(File.join(Sinatra::Application.public, "javascripts", "#{js}.js")).to_i.to_s
         "/javascripts/#{js}.js"
-      end
-
-      #def pullJob
-      #  job = @@bsh.reserve(2)
-      #end
-
-      def pushJob(message, options = {})
-        priority = options[:priority] || 65536
-        delay    = options[:delay] || 0
-        ttr      = options[:ttr] || 120
-
-        @@bsh.put(message, priority, delay, ttr)
       end
 
     end # end of helpers
 
     before do
+      # validate our connection before processing any request
       halt "Connection is not setup!" unless is_setup?
+
+      # make sure we're using the proper tube
       @@bsh.watch(@@current_tube) unless @@current_tube.nil?
       @@bsh.use(@@current_tube) unless @@current_tube.nil?
     end
 
+    # index
     get '/' do
       @stats = @@bsh.stats
       erb :index
     end
 
+    # lists all tubes
     get '/tubes' do
       @tubes = @@bsh.list_tubes[@@bsh.last_server]
       erb :"tubes/index", :locals => {:bsh => @@bsh }
     end
 
-    get '/tubes/:tube_name' do |name|
-      #@tube = @@bsh.stats_tube(name)
-      @@current_tube = name
-      
+    # retrieves all jobs attainable within this Tube
+    get '/tubes/:tube_name' do
+      @@current_tube = params[:tube_name]
+
+      # parse tube and pass it off
       tube_info = BeansProcessor::parseTube(@@current_tube)
       erb :"tubes/show", :locals => { :info => tube_info }
     end
 
-    get '/jobs/:id' do
+    # deletes job with :id
+    get '/jobs/:id/delete' do |id|
+      tube = BeansProcessor::getJob(id)["tube"]
+      BeansProcessor::deleteJob(id)
 
+      flash[:notice] = "Deleted job with id `#{id}' successfully."
+      redirect "/tubes/#{tube}"
     end
 
-    get '/jobs/:id/bury' do |id|
-      BeansProcessor::buryJob(id)
-      tube_name = @@bsh.peek_job(id).fetch("#{@@bsh.last_conn.addr}").stats["tube"]
-      #bslog "Redirecting to tube #{tube_name}"
-      redirect "#{appRoot}/tubes/#{tube_name}"
+    # kicks a specified number of jobs in :tube_name
+    post '/tubes/:tube_name/kick' do |tube|
+      BeansProcessor::kickTube(params[:nrJobsToKick])
+
+      flash[:notice] = "Kicked #{params[:nrJobsToKick]} jobs in tube `#{tube}'."
+      redirect "/tubes/#{tube}"
     end
 
-    get '/tube/:id/kick/:nr' do |id, nr|
-
-    end
-
-    get '/stylesheets/application.css' do
-      content_type 'text/css'
-      sass :"/stylesheets/application"
-    end
   end
-
 end
