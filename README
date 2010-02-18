@@ -1,0 +1,4 @@
+Beanstalker
+
+Is a Sinatra-powered web interface for monitoring beanstalkd, a light-weight messaging system written in C.
+Beanstalker interacts with beanstalkd through the Ruby interface implemented in the gem 'beanstalk-client'.
