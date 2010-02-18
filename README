@@ -2,3 +2,23 @@ Beanstalker
 
 Is a Sinatra-powered web interface for monitoring beanstalkd, a light-weight messaging system written in C.
 Beanstalker interacts with beanstalkd through the Ruby interface implemented in the gem 'beanstalk-client'.
+
+Dependencies:
+* RubyGems
+* sinatra ( >= 0.9.4 )
+* sinatra-content-for ( >= 0.2)
+* beanstalk-client (fork by sugarfly, >= 1.0.3)
+* rack-flash ( >= 0.1.1 )
+
+Please note that for Beanstalker to work, you must obtain:
+a) the forked version of beanstalk-client
+b) patched version of the server beanstalkd
+
+To get the compliant ruby gem version:
+  $ gem sources -a http://gems.github.com (you only have to do this once)
+  $ sudo gem install sugarfly-beanstalk-client-ruby
+
+For the patched version of the server, however, I will be posting my patches to the beanstalkd mailing list with a request to integrate the changes into the main ref. Until then, you can grab the source from the following link:
+  git clone git://powerpuffcow.com/beanstalkd.git
+and compile it yourself:
+  $ ./configure && make
